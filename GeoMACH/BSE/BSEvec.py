@@ -7,7 +7,7 @@ B-spline surface-modeling engine (BSE) vec class
 from __future__ import division
 import numpy
 
-
+import operator
 
 class BSEvec(object):
 
@@ -116,32 +116,114 @@ class BSEvecStr(BSEvec):
 
         self._open_file(filename)
         self._write('solid model\n')
-        for surf in self.surfs:
-            num_u, num_v = surf.shape[:2]
-            for ind_v in xrange(num_v - 1):
-                for ind_u in xrange(num_u - 1):
-                    pt1 = surf[ind_u, ind_v+1, :]
-                    pt2 = surf[ind_u, ind_v, :]
-                    pt3 = surf[ind_u+1, ind_v, :]
-                    
-                    for pts in [[surf[ind_u, ind_v+1, :],
-                                 surf[ind_u, ind_v, :],
-                                 surf[ind_u+1, ind_v, :]],
-                                [surf[ind_u+1, ind_v, :],
-                                 surf[ind_u+1, ind_v+1, :],
-                                 surf[ind_u, ind_v+1, :]]]:
-                        nor = numpy.cross(pts[2] - pts[1], 
-                                          pts[0] - pts[1])
-                        nor /= numpy.linalg.norm(nor)
-                        self._write_line(nor, 'facet normal')
-                        self._write('outer loop\n')
-                        self._write_line(pts[0], 'vertex ')
-                        self._write_line(pts[1], 'vertex ')
-                        self._write_line(pts[2], 'vertex ')
-                        self._write('endloop\n')
-                        self._write('endfacet\n')
+
+#        for surf in self.surfs:
+        for isurf in xrange(len(self.surfs)):
+            if not self._hidden[isurf]:
+                surf = self.surfs[isurf]
+
+                num_u, num_v = surf.shape[:2]
+                for ind_v in xrange(num_v - 1):
+                    for ind_u in xrange(num_u - 1):
+                        pt1 = surf[ind_u, ind_v+1, :]
+                        pt2 = surf[ind_u, ind_v, :]
+                        pt3 = surf[ind_u+1, ind_v, :]
+                        
+                        for pts in [[surf[ind_u, ind_v+1, :],
+                                     surf[ind_u, ind_v, :],
+                                     surf[ind_u+1, ind_v, :]],
+                                    [surf[ind_u+1, ind_v, :],
+                                     surf[ind_u+1, ind_v+1, :],
+                                     surf[ind_u, ind_v+1, :]]]:
+                            nor = numpy.cross(pts[2] - pts[1], 
+                                              pts[0] - pts[1])
+                            nor /= numpy.linalg.norm(nor)
+                            self._write_line(nor, 'facet normal ')
+                            self._write('outer loop\n')
+                            self._write_line(pts[0], 'vertex ')
+                            self._write_line(pts[1], 'vertex ')
+                            self._write_line(pts[2], 'vertex ')
+                            self._write('endloop\n')
+                            self._write('endfacet\n')
         self._write('endsolid model')
         self._close_file()
+
+    def export_MESH(self, filename=None):
+        if filename is None:
+            filename = 'surface_fluid.mesh'
+
+        fluid = open(filename, 'w')
+
+        nElem = 0
+
+        pts = []
+        pts_filtered = []
+        corresp = []
+        lumped = []
+
+        index = 0
+        for isurf in xrange(len(self.surfs)):
+            if not self._hidden[isurf]:
+                surf = self.surfs[isurf]
+                num_u, num_v = surf.shape[:2]
+                nElem += (num_u-1)*(num_v-1)
+                for ind_v in xrange(num_v):
+                    for ind_u in xrange(num_u):
+                        pt = surf[ind_u, ind_v, :]
+                        pts.append([round(pt[0],9),round(pt[1],9),round(pt[2],9),index])
+                        index += 1
+        pts_sorted = sorted(pts, key = operator.itemgetter(0, 1, 2))
+
+        eps = 1e-8
+        index = pts_sorted[0][3]
+        corresp.append([pts_sorted[0][3], index])
+        for ipt in range(1,len(pts_sorted)):
+            if (abs(pts_sorted[ipt][0]-pts_sorted[ipt-1][0]) > eps or abs(pts_sorted[ipt][1]-pts_sorted[ipt-1][1]) > eps or abs(pts_sorted[ipt][2]-pts_sorted[ipt-1][2]) > eps):
+                index = pts_sorted[ipt][3]
+            corresp.append([pts_sorted[ipt][3], index])
+        corresp.sort(key = operator.itemgetter(0))
+
+        pts_filtered.append(pts[0])
+        index = 0
+        for ipt in range(1,len(pts)):
+            lumped.append(index)
+            if (corresp[ipt][0] == corresp[ipt][1]):
+                pts_filtered.append(pts[ipt])
+                index += 1
+
+        nVertex = len(pts_filtered)
+
+        string = '\nMeshVersionFormatted\n2\n\nDimension\n3\n\nVertices\n' + str(nVertex) + '\n\n'
+        fluid.write(string)
+
+        for pt in pts_filtered:
+            y = pt[2]
+            if (abs(y) < 0.001): y = 0.0
+            string = str(pt[0]) + " " + str(y) + " " + str(pt[1]) + " 0\n" # ROTATE FOR CFD
+            fluid.write(string)
+
+        fluid.write('\nTriangles\n' + str(2*nElem) + '\n\n')
+
+        base_index = 0
+        ref = 0
+        for isurf in xrange(len(self.surfs)):
+            if not self._hidden[isurf]:
+                ref = ref+1;
+                surf = self.surfs[isurf]
+                num_u, num_v = surf.shape[:2]
+                for ind_v in xrange(num_v - 1):
+                    for ind_u in xrange(num_u - 1):
+                        ids = numpy.array([ind_u+(ind_v+1)*num_v, ind_u+ind_v*num_v, (ind_u+1)+ind_v*num_v]) + base_index
+                        fluid.write(str(lumped[corresp[ids[0]][1]]+1) + " " + str(lumped[corresp[ids[1]][1]]+1)  + " " + str(lumped[corresp[ids[2]][1]]+1) + " " + str(ref) + "\n")
+                        ids = numpy.array([(ind_u+1)+ind_v*num_v, (ind_u+1)+(ind_v+1)*num_v, ind_u+(ind_v+1)*num_v]) + base_index
+                        fluid.write(str(lumped[corresp[ids[0]][1]]+1) + " " + str(lumped[corresp[ids[1]][1]]+1)  + " " + str(lumped[corresp[ids[2]][1]]+1) + " " + str(ref) + "\n")
+                        # ids = numpy.array([ind_u+(ind_v+1)*num_v, ind_u+ind_v*num_v, (ind_u+1)+ind_v*num_v, (ind_u+1)+(ind_v+1)*num_v]) + base_index
+                        # struct.write(str(corresp_reversed[ids[0]][0]) + " " + str(corresp_reversed[ids[1]][0])  + " " + str(corresp_reversed[ids[2]][0]) + " " + str(corresp_reversed[ids[3]][0]) + " " + str(ref) + "\n")
+                base_index += num_u*num_v
+
+        fluid.write('\nEnd\n')
+
+        fluid.close()
 
     def export_IGES(self, filename=None):
         ks = []

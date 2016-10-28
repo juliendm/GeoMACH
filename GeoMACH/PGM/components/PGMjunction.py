@@ -6,7 +6,7 @@ John Hwang, July 2014
 from __future__ import division
 import numpy
 import scipy.sparse
-import time
+import time, sys
 from collections import OrderedDict
 
 from GeoMACH.BSE.BSEmodel import BSEmodel
@@ -56,15 +56,24 @@ class PGMjunction(PGMinterpolant):
         super(PGMjunction, self).__init__()
 
         self._fcomp = config.comps[fcomp].faces[face]
+
+        #####################################################
+        self._fcomp_other = None
+        if face == 'lft':
+            self._fcomp_other = config.comps[fcomp].faces['bot']
+        elif face == 'rgt':
+            self._fcomp_other = config.comps[fcomp].faces['bot']
+        #####################################################
+
         self._loc = {'u': loc[0], 'v': loc[1]}
         self._mcomp = config.comps[mcomp]
         self._side = side
 
         #Check if the user gave a single weight for all the edges or if he specified one weight for each edge
-	self._fweight = numpy.zeros(6)
-	self._mweight = numpy.zeros(6)
-	self._fweight[:] = fweight
-	self._mweight[:] = mweight
+    self._fweight = numpy.zeros(6)
+    self._mweight = numpy.zeros(6)
+    self._fweight[:] = fweight
+    self._mweight[:] = mweight
 
         self._num_surf_wing = self._mcomp.faces['upp']._num_surf['u']
 
@@ -96,11 +105,11 @@ class PGMjunction(PGMinterpolant):
         face.set_diff_surf(False, ind_i=-1, ind_j=0, ind_u=0, ind_v=2)
         face.set_diff_surf(False, ind_i=0, ind_j=-1, ind_u=2, ind_v=0)
         face.set_diff_surf(False, ind_i=-1, ind_j=-1, ind_u=0, ind_v=0)
-	
+    
         for ind_j in xrange(2 + self._num_surf_wing):
             face.set_diff_surf(False, ind_i=0, ind_j=ind_j, ind_u=0)
             face.set_diff_surf(False, ind_i=-1, ind_j=ind_j, ind_u=2)
-	for ind_i in [0,-1]:
+    for ind_i in [0,-1]:
             face.set_diff_surf(False, ind_i=ind_i, ind_j=0, ind_v=0)
             face.set_diff_surf(False, ind_i=ind_i, ind_j=-1, ind_v=2)
 
@@ -119,6 +128,10 @@ class PGMjunction(PGMinterpolant):
     def set_hidden_surfaces(self):
         loc = self._loc
         fInds = self._rotate(self._fcomp._surf_indices)
+        #####################################################
+        if not self._fcomp_other is None: fInds = numpy.concatenate((fInds,self._rotate(self._fcomp_other._surf_indices)),axis=0)
+        #####################################################
+
         for ind_v in xrange(2 + self._num_surf_wing):
             for ind_u in xrange(2):
                 isurf = fInds[ind_u + loc['u'], ind_v + loc['v']]
@@ -128,13 +141,20 @@ class PGMjunction(PGMinterpolant):
         loc = self._loc
 
         fu = self._fcomp._num_cp_list['u']
+        #####################################################
+        if not self._fcomp_other is None: fu = numpy.concatenate((fu,self._fcomp_other._num_cp_list['u']),axis=0)
+        #####################################################
         fv = self._fcomp._num_cp_list['v']
         fu,fv = self._flip(fu,fv)
         fu1 = sum(fu[:loc['u']])
         fu2 = sum(fu[:loc['u']+2])
         fv1 = sum(fv[:loc['v']])
         fv2 = sum(fv[:loc['v']+2+self._num_surf_wing])
+
         fFace_inds = self._rotate(self._fcomp.vec_inds['cp_bez'])
+        #####################################################
+        if not self._fcomp_other is None: fFace_inds = numpy.concatenate((fFace_inds[0:-1],self._rotate(self._fcomp_other.vec_inds['cp_bez'])),axis=0)
+        #####################################################
         fFace_inds = fFace_inds[fu1:fu2+1,fv1:fv2+1]
 
         num_u = [fu[loc['u']] + 1, 4, fu[loc['u']+1] + 1]

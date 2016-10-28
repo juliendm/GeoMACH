@@ -2,9 +2,13 @@ from __future__ import division
 import numpy
 
 
-def writeBDF(filename, nodes, quads, symm, quad_groups, group_names,
+def writeBDF(filename, nodes, quads, symm, quad_groups, group_names, group_names_oml,
              new_mem, new_nodes, new_ucoord, new_vcoord):
     f = open(filename, 'w')
+
+    ##########################################
+    struct = open(filename.split('.bdf')[0] + '.mesh', 'w')
+    ##########################################
 
     def writeLine(line):
         write(line,r=80)
@@ -51,12 +55,38 @@ def writeBDF(filename, nodes, quads, symm, quad_groups, group_names,
     for k in xrange(4):
         used[quads[:,k]-1] = True
 
+    ##########################################
+    names_id = []
+    for i in xrange(len(unique)):
+        names_id.append(group_names[unique[i]])
+    nElem_filtered = 0
+    used_filtered = numpy.zeros(nodes.shape[0], bool)
+    for i in range(quads.shape[0]):
+        if names_id[quad_groups[i]] in group_names_oml:
+            nElem_filtered += 1
+            for k in xrange(4):
+                used_filtered[quads[i,k]-1] = True
+    ##########################################
+
     index = 0
     node_indices = numpy.zeros(nodes.shape[0], int)
+    ##########################################
+    nVertices_filtered = 0
+    node_indices_filtered = numpy.zeros(nodes.shape[0], int)
+    ##########################################
     for k in xrange(nodes.shape[0]):
         if used[k]:
             index += 1
             node_indices[k] = index
+        ##########################################
+        if used_filtered[k]:
+            nVertices_filtered += 1
+            node_indices_filtered[k] = nVertices_filtered
+        ##########################################
+
+    ##########################################
+    struct.write('\nMeshVersionFormatted\n2\n\nDimension\n3\n\nVertices\n' + str(nVertices_filtered) + '\n\n')
+    ##########################################
 
     for k in range(nodes.shape[0]):
         if used[k]:
@@ -75,18 +105,33 @@ def writeBDF(filename, nodes, quads, symm, quad_groups, group_names,
             write(' ',l=16)
             write('0',l=16)
             write(' ',l=8)
-            write('\n')            
+            write('\n')
+
+        ##########################################
+        if used_filtered[k]:
+            struct.write(str(nodes[k,0]) + " " + str(nodes[k,2]) + " " + str(nodes[k,1]) + " "+ str(node_indices[k]) +"\n")
+        ##########################################
+
+    ##########################################
+    struct.write('\nQuadrilaterals\n' + str(nElem_filtered) + '\n\n')
+    ##########################################
 
     for i in range(quads.shape[0]):
         write('CQUAD4  ')
         write(str(i+1),l=8)
-        #write(str(quad_groups[i]+1),l=8)
-        write(str(i+1),l=8)
+        write(str(quad_groups[i]+1),l=8)
+        #write(str(i+1),l=8)
         write(str(node_indices[quads[i,0]-1]),l=8)
         write(str(node_indices[quads[i,1]-1]),l=8)
         write(str(node_indices[quads[i,2]-1]),l=8)
         write(str(node_indices[quads[i,3]-1]),l=8)
         write('\n')
+
+        ##########################################
+        if names_id[quad_groups[i]] in group_names_oml:
+            struct.write(str(node_indices_filtered[quads[i,0]-1]) + " " + str(node_indices_filtered[quads[i,1]-1])  + " " + str(node_indices_filtered[quads[i,2]-1]) + " " + str(node_indices_filtered[quads[i,3]-1]) + " " + str(quad_groups[i]+1) + " \n")
+        ##########################################
+
         q = quads[i,:]
         if q[0]==q[1] or q[0]==q[2] or q[0]==q[3] or \
            q[1]==q[2] or q[1]==q[3] or q[2]==q[3]:
@@ -110,14 +155,29 @@ def writeBDF(filename, nodes, quads, symm, quad_groups, group_names,
             write('%.8E' % new_vcoord[imin],l=16)
             #write(' ',l=24)
             write('\n')
-            
 
+    min_x_index = 0
+    min_x = 1.0e20
+    max_x_index = 0
+    max_x = -1.0e20
     for i in range(nodes.shape[0]):
         if symm[i] and used[i]:
+            if nodes[i,0] > max_x:
+                max_x = nodes[i,0]
+                max_x_index = node_indices[i]
+            if nodes[i,0] < min_x:
+                min_x = nodes[i,0]
+                min_x_index = node_indices[i]
+
+    for i in range(nodes.shape[0]):
+        if symm[i] and used[i]: # and used_filtered[i]: ##################################
             write('SPC     ')
             write('1',l=8)
             write(str(node_indices[i]),l=8)
-            write('  123456')
+            if used_filtered[i]: #node_indices[i] in [min_x_index,max_x_index]:
+                write('  123456')
+            else:
+                write('       3')
             write('     0.0')
             #write(' ',l=40)
             write('\n')
@@ -125,3 +185,8 @@ def writeBDF(filename, nodes, quads, symm, quad_groups, group_names,
     writeLine('END BULK')
 
     f.close()
+
+    ##########################################
+    struct.write('\nEnd\n')
+    struct.close()
+    ##########################################

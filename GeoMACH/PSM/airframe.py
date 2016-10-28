@@ -126,6 +126,9 @@ class Airframe(object):
         quads = []
         quad_groups = []
         group_names = []
+        ##########################################
+        group_names_oml = []
+        ##########################################
         nCount = 0
         nGroup = 0
         for i in range(len(self.surfaceNames)):
@@ -135,6 +138,9 @@ class Airframe(object):
             nCount = nCount + nnode1[i+1] - nnode1[i]
             quad_groups.append(nGroup*numpy.ones(quads1[i].shape[0], int))
             group_names.append(self.surfaceNames[i])
+            ##########################################
+            if not self.surfaceHidden[i]: group_names_oml.append(self.surfaceNames[i])
+            ##########################################
             nGroup += 1
         for i in range(self.nmem):
             mesh.append([self.memberNames[i], nodes2[nnode2[i]:nnode2[i+1]], quads2[i]])
@@ -173,7 +179,7 @@ class Airframe(object):
         self.write2TecFEquads('test.dat',[['test',nodes,quads]])
 
         import BDFwriter
-        BDFwriter.writeBDF(filename+'.bdf',nodes,quads,symm,quad_groups,group_names,
+        BDFwriter.writeBDF(filename+'.bdf',nodes,quads,symm,quad_groups,group_names, group_names_oml,
                            new_mem, new_nodes, new_ucoord, new_vcoord)
 
     def computePreviewSurfaces(self):
@@ -430,6 +436,9 @@ class Airframe(object):
         premeshFaces = self.premeshFaces
 
         self.surfaceNames = []
+        ##########################################
+        self.surfaceHidden = []
+        ##########################################
         B0 = []
         quads0 = []
         nnode0 = [0]
@@ -482,6 +491,11 @@ class Airframe(object):
                             name = comp._name + ':' + str(face._name) + ':' + str(i) + ':' + str(j)
 
                             self.surfaceNames.append(name)
+
+                            ##########################################
+                            self.surfaceHidden.append(bse.hidden[surf])
+                            ##########################################
+
                             B0.append(B)
                             nnode0.append(nnode0[-1] + P0.shape[0])
                             quads0.append(quads)

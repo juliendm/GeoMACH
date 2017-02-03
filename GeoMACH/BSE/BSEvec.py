@@ -202,7 +202,9 @@ class BSEvecStr(BSEvec):
             string = str(pt[0]) + " " + str(y) + " " + str(pt[1]) + " 0\n" # ROTATE FOR CFD
             fluid.write(string)
 
-        fluid.write('\nTriangles\n' + str(2*nElem) + '\n\n')
+        remove = [455] #[452, 364, 367, 370, 373] #[450, 96, 456, 454, 452, 373, 372, 371, 370, 369, 368, 367, 366, 365, 364, 363, 362] #[96, 92, 451, 450, 453, 455, 457]
+
+        fluid.write('\nTriangles\n' + str(2*(nElem - len(remove)*((num_u-1)*(num_v-1))) + 53) + '\n\n')
 
         base_index = 0
         ref = 0
@@ -211,16 +213,21 @@ class BSEvecStr(BSEvec):
                 ref = ref+1;
                 surf = self.surfs[isurf]
                 num_u, num_v = surf.shape[:2]
-                for ind_v in xrange(num_v - 1):
-                    for ind_u in xrange(num_u - 1):
-                        ids = numpy.array([ind_u+(ind_v+1)*num_v, ind_u+ind_v*num_v, (ind_u+1)+ind_v*num_v]) + base_index
-                        fluid.write(str(lumped[corresp[ids[0]][1]]+1) + " " + str(lumped[corresp[ids[1]][1]]+1)  + " " + str(lumped[corresp[ids[2]][1]]+1) + " " + str(ref) + "\n")
-                        ids = numpy.array([(ind_u+1)+ind_v*num_v, (ind_u+1)+(ind_v+1)*num_v, ind_u+(ind_v+1)*num_v]) + base_index
-                        fluid.write(str(lumped[corresp[ids[0]][1]]+1) + " " + str(lumped[corresp[ids[1]][1]]+1)  + " " + str(lumped[corresp[ids[2]][1]]+1) + " " + str(ref) + "\n")
-                        # ids = numpy.array([ind_u+(ind_v+1)*num_v, ind_u+ind_v*num_v, (ind_u+1)+ind_v*num_v, (ind_u+1)+(ind_v+1)*num_v]) + base_index
-                        # struct.write(str(corresp_reversed[ids[0]][0]) + " " + str(corresp_reversed[ids[1]][0])  + " " + str(corresp_reversed[ids[2]][0]) + " " + str(corresp_reversed[ids[3]][0]) + " " + str(ref) + "\n")
+
+                if ref not in remove:
+                    for ind_v in xrange(num_v - 1):
+                        for ind_u in xrange(num_u - 1):
+                            ids = numpy.array([ind_u+(ind_v+1)*num_u, ind_u+ind_v*num_u, (ind_u+1)+ind_v*num_u]) + base_index
+                            fluid.write(str(lumped[corresp[ids[0]][1]]+1) + " " + str(lumped[corresp[ids[1]][1]]+1)  + " " + str(lumped[corresp[ids[2]][1]]+1) + " " + str(ref) + "\n")
+                            ids = numpy.array([(ind_u+1)+ind_v*num_u, (ind_u+1)+(ind_v+1)*num_u, ind_u+(ind_v+1)*num_u]) + base_index
+                            fluid.write(str(lumped[corresp[ids[0]][1]]+1) + " " + str(lumped[corresp[ids[1]][1]]+1)  + " " + str(lumped[corresp[ids[2]][1]]+1) + " " + str(ref) + "\n")
+                            # ids = numpy.array([ind_u+(ind_v+1)*num_v, ind_u+ind_v*num_v, (ind_u+1)+ind_v*num_v, (ind_u+1)+(ind_v+1)*num_v]) + base_index
+                            # struct.write(str(corresp_reversed[ids[0]][0]) + " " + str(corresp_reversed[ids[1]][0])  + " " + str(corresp_reversed[ids[2]][0]) + " " + str(corresp_reversed[ids[3]][0]) + " " + str(ref) + "\n")
+
+
                 base_index += num_u*num_v
 
+        fluid.write('30837 30836 31674 1000\n30836 31675 31674 1000\n30836 30835 31675 1000\n30835 31676 31675 1000\n30835 30834 31676 1000\n30834 31677 31676 1000\n30834 30833 31677 1000\n30833 31678 31677 1000\n30833 30832 31678 1000\n30832 31679 31678 1000\n30832 30831 31679 1000\n30831 31680 31679 1000\n30831 30830 31680 1000\n30830 31681 31680 1000\n30830 30829 31681 1000\n30829 31682 31681 1000\n30829 30756 31682 1000\n30756 31683 31682 1000\n30756 30755 31683 1000\n30755 31756 31683 1000\n30755 30754 31756 1000\n30754 31757 31756 1000\n30754 30753 31757 1000\n30753 31758 31757 1000\n30753 30752 31758 1000\n30752 31759 31758 1000\n30752 30751 31759 1000\n30751 31760 31759 1000\n30751 30750 31760 1000\n30750 31761 31760 1000\n30750 30749 31761 1000\n30749 31762 31761 1000\n30749 30748 31762 1000\n30748 31763 31762 1000\n30748 30675 31763 1000\n30675 31764 31763 1000\n30675 30674 31764 1000\n30674 31829 31764 1000\n30674 30673 31829 1000\n30673 31830 31829 1000\n30673 30672 31830 1000\n30672 31831 31830 1000\n30672 30671 31831 1000\n30671 31832 31831 1000\n30671 30670 31832 1000\n30670 31833 31832 1000\n30670 30669 31833 1000\n30669 31834 31833 1000\n30669 30668 31834 1000\n30668 31835 31834 1000\n30668 30667 31835 1000\n30667 31836 31835 1000\n30667 30666 31836 1000\n')
         fluid.write('\nEnd\n')
 
         fluid.close()

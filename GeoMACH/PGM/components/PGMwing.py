@@ -17,7 +17,7 @@ class PGMwing(PGMprimitive):
     """ Wing component """
 
     def __init__(self, num_x=1, num_z=1,
-                 left_closed=False, right_closed=False, blunt_te=False):
+                 left_closed=False, right_closed=False, blunt_le=True, blunt_te=False):
         """
         Parameters
         ----------
@@ -36,6 +36,7 @@ class PGMwing(PGMprimitive):
 
         self._left_closed = left_closed
         self._right_closed = right_closed
+        self._blunt_le = blunt_le
         self._blunt_te = blunt_te
 
         self._ax1 = 3
@@ -67,21 +68,36 @@ class PGMwing(PGMprimitive):
             face = self.faces.values()[ind]
              #C1 Everywhere
             face.set_diff_surf(True)
+
+            #C0 leading edge
+            if not self._blunt_le:
+                num_x_local = 5
+                face.set_diff_surf(False, ind_i=(1-ind)*num_x_local, ind_u=2*(1-ind))
+                face.set_diff_edge(True, 'u' + str(1-ind), ind_i=(1-ind)*num_x_local)
+
             #C0 trailing edge
             if not self._blunt_te:
                 face.set_diff_surf(False, ind_i=-ind, ind_u=2*ind)
                 face.set_diff_edge(True, 'u' + str(ind), ind_i=-ind)
+
             #C0 left edge
             if not self._left_closed:
                 face.set_diff_surf(False, ind_j=-1, ind_v=2)
                 face.set_diff_edge(True, 'v1', ind_j=-1)
+                if not self._blunt_le:
+                    num_x_local = 5
+                    face.set_diff_corner(False, ind_i=(1-ind)*num_x_local, ind_j=-1)
                 if not self._blunt_te:
                     face.set_diff_corner(False, ind_i=-ind, ind_j=-1)
                 #face.set_diff_corner(False, ind_i=ind, ind_j=-1)
+
             #C0 right edge
             if not self._right_closed:
                 face.set_diff_surf(False, ind_j=0, ind_v=0)
                 face.set_diff_edge(True, 'v0', ind_j=0)
+                if not self._blunt_le:
+                    num_x_local = 5
+                    face.set_diff_corner(False, ind_i=(1-ind)*num_x_local, ind_j=0)
                 if not self._blunt_te:
                     face.set_diff_corner(False, ind_i=-ind, ind_j=0)
                 #face.set_diff_corner(False, ind_i=ind, ind_j=0)

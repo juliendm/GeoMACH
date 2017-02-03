@@ -35,13 +35,14 @@ def writeBDF(filename, nodes, quads, symm, quad_groups, group_names, group_names
     writeLine('TIME 600')
     writeLine('CEND')
     writeLine('SPC = 1')
+    writeLine('ANALYSIS = STATICS')
+    writeLine('DESOBJ = 1')
+    writeLine('DESSUB = 1')
     writeLine('DISPLACEMENT = ALL')
     writeLine('FORCE = ALL')
     writeLine('STRESS = ALL')
     writeLine('SUBCASE 1')
     writeLine('    LOAD = 1')
-    writeLine('SUBCASE 2')
-    writeLine('    LOAD = 2')
     writeLine('BEGIN BULK')
 
     for i in xrange(len(unique)):
@@ -171,10 +172,10 @@ def writeBDF(filename, nodes, quads, symm, quad_groups, group_names, group_names
 
     f.close()
 
-    writeMESH(filename.split('.bdf')[0] + '_surface.mesh', nodes, quads, quad_groups, node_indices_filtered, nVertices_filtered, nElem_filtered, used_vertice_filtered, used_elem_filtered)
-    writeMESH(filename.split('.bdf')[0] + '.mesh', nodes, quads, quad_groups, node_indices, nVertices, nElem, used_vertice, used_elem)
+    writeMESH(filename.split('.bdf')[0] + '_surface.mesh', nodes, quads, quad_groups, node_indices_filtered, nVertices_filtered, nElem_filtered, used_vertice_filtered, used_elem_filtered, used_elem_filtered)
+    writeMESH(filename.split('.bdf')[0] + '.mesh', nodes, quads, quad_groups, node_indices, nVertices, nElem, used_vertice, used_elem, used_elem_filtered)
 
-def writeMESH(filename, nodes, quads, quad_groups, node_indices, nVertices, nElem, used_vertice, used_elem):
+def writeMESH(filename, nodes, quads, quad_groups, node_indices, nVertices, nElem, used_vertice, used_elem, used_elem_filtered):
 
     struct = open(filename, 'w')
 
@@ -188,7 +189,10 @@ def writeMESH(filename, nodes, quads, quad_groups, node_indices, nVertices, nEle
 
     for k in range(quads.shape[0]):
         if used_elem[k]:
-            struct.write(str(node_indices[quads[k,0]-1]) + " " + str(node_indices[quads[k,1]-1])  + " " + str(node_indices[quads[k,2]-1]) + " " + str(node_indices[quads[k,3]-1]) + " " + str(quad_groups[k]+1) + " \n")
+            if used_elem_filtered[k]:
+                struct.write(str(node_indices[quads[k,0]-1]) + " " + str(node_indices[quads[k,1]-1])  + " " + str(node_indices[quads[k,2]-1]) + " " + str(node_indices[quads[k,3]-1]) + " 1\n")
+            else:
+                struct.write(str(node_indices[quads[k,0]-1]) + " " + str(node_indices[quads[k,1]-1])  + " " + str(node_indices[quads[k,2]-1]) + " " + str(node_indices[quads[k,3]-1]) + " 0\n")
 
     struct.write('\nEnd\n')
     struct.close()

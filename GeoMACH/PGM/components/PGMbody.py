@@ -55,27 +55,27 @@ class PGMbody(PGMprimitive):
             x_top = 0.18
             x_bot = 0.1 # 0.0 <-> 0.5
 
-            # theta1 = {'rgt': -x_bot, #-1/6.0, # -0.5 + x,
-            #           'top': x_top, #1/6.0, # 1/3.0,
-            #           'lft': 1.0-x_top, #5/6.0, # 2/3.0,
-            #           'bot': 1.0+x_bot, #7/6.0, # 1.5 - x,
-            # }
-            # theta2 = {'rgt': x_top, #1/6.0, # 1/3.0, 
-            #           'top': 1.0-x_top, #5/6.0, # 2/3.0,
-            #           'lft': 1.0+x_bot, #7/6.0, # 1.5 - x,
-            #           'bot': 2.0-x_bot, #11/6.0, # 1.5 + x,
-            # }
+            theta1 = {'rgt': -x_bot, #-1/6.0, # -0.5 + x,
+                      'top': x_top, #1/6.0, # 1/3.0,
+                      'lft': 1.0-x_top, #5/6.0, # 2/3.0,
+                      'bot': 1.0+x_bot, #7/6.0, # 1.5 - x,
+            }
+            theta2 = {'rgt': x_top, #1/6.0, # 1/3.0, 
+                      'top': 1.0-x_top, #5/6.0, # 2/3.0,
+                      'lft': 1.0+x_bot, #7/6.0, # 1.5 - x,
+                      'bot': 2.0-x_bot, #11/6.0, # 1.5 + x,
+            }
 
-            theta1 = {'rgt': -1/4.0, 
-                      'top': 1/4.0,
-                      'lft': 3/4.0,
-                      'bot': 5/4.0,
-            }
-            theta2 = {'rgt': 1/4.0, 
-                      'top': 3/4.0,
-                      'lft': 5/4.0,
-                      'bot': 7/4.0,
-            }
+            # theta1 = {'rgt': -1/4.0, 
+            #           'top': 1/4.0,
+            #           'lft': 3/4.0,
+            #           'bot': 5/4.0,
+            # }
+            # theta2 = {'rgt': 1/4.0, 
+            #           'top': 3/4.0,
+            #           'lft': 5/4.0,
+            #           'bot': 7/4.0,
+            # }
 
             flt = self.props['flt'].vec_data['prop']
             for fname in self.faces:

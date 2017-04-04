@@ -53,7 +53,7 @@ class PGMbody(PGMprimitive):
             #x = 0.22 # 0.16 (small) <-> 0.25 (ini)
 
             x_top = 0.18
-            x_bot = 0.1 # 0.0 <-> 0.5
+            x_bot = 0.22 #0.1 # 0.0 <-> 0.5
 
             theta1 = {'rgt': -x_bot, #-1/6.0, # -0.5 + x,
                       'top': x_top, #1/6.0, # 1/3.0,

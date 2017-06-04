@@ -172,10 +172,10 @@ def writeBDF(filename, nodes, quads, symm, quad_groups, group_names, group_names
 
     f.close()
 
-    writeMESH(filename.split('.bdf')[0] + '_surface.mesh', nodes, quads, quad_groups, node_indices_filtered, nVertices_filtered, nElem_filtered, used_vertice_filtered, used_elem_filtered, used_elem_filtered)
-    writeMESH(filename.split('.bdf')[0] + '.mesh', nodes, quads, quad_groups, node_indices, nVertices, nElem, used_vertice, used_elem, used_elem_filtered)
+    writeMESH(filename.split('.bdf')[0] + '_surface.mesh', nodes, quads, quad_groups, node_indices, node_indices_filtered, nVertices_filtered, nElem_filtered, used_vertice_filtered, used_elem_filtered, used_elem_filtered)
+    writeMESH(filename.split('.bdf')[0] + '.mesh', nodes, quads, quad_groups, node_indices, node_indices, nVertices, nElem, used_vertice, used_elem, used_elem_filtered)
 
-def writeMESH(filename, nodes, quads, quad_groups, node_indices, nVertices, nElem, used_vertice, used_elem, used_elem_filtered):
+def writeMESH(filename, nodes, quads, quad_groups, node_indices_absolute, node_indices, nVertices, nElem, used_vertice, used_elem, used_elem_filtered):
 
     struct = open(filename, 'w')
 
@@ -183,7 +183,7 @@ def writeMESH(filename, nodes, quads, quad_groups, node_indices, nVertices, nEle
 
     for k in range(nodes.shape[0]):
         if used_vertice[k]:
-            struct.write(str(nodes[k,0]) + " " + str(nodes[k,2]) + " " + str(nodes[k,1]) + " "+ str(node_indices[k]) +"\n")
+            struct.write(str(nodes[k,0]) + " " + str(nodes[k,2]) + " " + str(nodes[k,1]) + " "+ str(node_indices_absolute[k]) +"\n")
 
     struct.write('\nQuadrilaterals\n' + str(nElem) + '\n\n')
 

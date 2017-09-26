@@ -64,7 +64,7 @@ class PGMtip(PGMinterpolant):
 
             num_u = face._num_cp_total['u']
             num_v = face._num_cp_total['v']
-            print 'here: ', num_u, num_v
+            # print 'here: ', num_u, num_v
 
             if self._side == 'right':
                 N = upp.vec_inds['cp_prim'][:,:2,:]

@@ -47,7 +47,7 @@ class PGMbody(PGMprimitive):
             face.set_diff_surf(True)
 
     def compute(self, name):
-        print name
+        # print name
         if name == 'cp_prim':
 
             #x = 0.22 # 0.16 (small) <-> 0.25 (ini)
@@ -79,7 +79,7 @@ class PGMbody(PGMprimitive):
 
             flt = self.props['flt'].vec_data['prop']
             for fname in self.faces:
-                print fname
+                # print fname
                 face = self.faces[fname]
                 num_u = face._num_cp_total['u']
                 num_v = face._num_cp_total['v']

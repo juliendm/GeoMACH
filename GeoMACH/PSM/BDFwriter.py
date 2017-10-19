@@ -108,15 +108,55 @@ def writeBDF(filename, nodes, quads, symm, quad_groups, group_names, group_names
             write('\n')
 
     for i in range(quads.shape[0]):
-        write('CQUAD4  ')
-        write(str(i+1),l=8)
-        write(str(quad_groups[i]+1),l=8)
-        #write(str(i+1),l=8)
-        write(str(node_indices[quads[i,0]-1]),l=8)
-        write(str(node_indices[quads[i,1]-1]),l=8)
-        write(str(node_indices[quads[i,2]-1]),l=8)
-        write(str(node_indices[quads[i,3]-1]),l=8)
-        write('\n')
+
+        # write('CQUAD4  ')
+        # write(str(i+1),l=8)
+        # write(str(quad_groups[i]+1),l=8)
+        # #write(str(i+1),l=8)
+        # write(str(node_indices[quads[i,0]-1]),l=8)
+        # write(str(node_indices[quads[i,1]-1]),l=8)
+        # write(str(node_indices[quads[i,2]-1]),l=8)
+        # write(str(node_indices[quads[i,3]-1]),l=8)
+        # write('\n')
+
+        coord_0 = nodes[quads[i,0]-1,:]; coord_1 = nodes[quads[i,1]-1,:]; coord_2 = nodes[quads[i,2]-1,:]; coord_3 = nodes[quads[i,3]-1,:]
+
+        if (index_max_angle(coord_0,coord_1,coord_2,coord_3) in [0,2]):
+
+            write('CTRIA3  ')
+            write(str(2*i+1),l=8)
+            write(str(quad_groups[i]+1),l=8)
+            write(str(node_indices[quads[i,0]-1]),l=8)
+            write(str(node_indices[quads[i,1]-1]),l=8)
+            write(str(node_indices[quads[i,2]-1]),l=8)
+            write('\n')
+
+            write('CTRIA3  ')
+            write(str(2*i+2),l=8)
+            write(str(quad_groups[i]+1),l=8)
+            write(str(node_indices[quads[i,2]-1]),l=8)
+            write(str(node_indices[quads[i,3]-1]),l=8)
+            write(str(node_indices[quads[i,0]-1]),l=8)
+            write('\n')
+
+        else:
+
+            write('CTRIA3  ')
+            write(str(2*i+1),l=8)
+            write(str(quad_groups[i]+1),l=8)
+            write(str(node_indices[quads[i,1]-1]),l=8)
+            write(str(node_indices[quads[i,2]-1]),l=8)
+            write(str(node_indices[quads[i,3]-1]),l=8)
+            write('\n')
+
+            write('CTRIA3  ')
+            write(str(2*i+2),l=8)
+            write(str(quad_groups[i]+1),l=8)
+            write(str(node_indices[quads[i,3]-1]),l=8)
+            write(str(node_indices[quads[i,0]-1]),l=8)
+            write(str(node_indices[quads[i,1]-1]),l=8)
+            write('\n')
+
 
         q = quads[i,:]
         if q[0]==q[1] or q[0]==q[2] or q[0]==q[3] or \
@@ -185,14 +225,59 @@ def writeMESH(filename, nodes, quads, quad_groups, node_indices_absolute, node_i
         if used_vertice[k]:
             struct.write(str(nodes[k,0]) + " " + str(nodes[k,2]) + " " + str(nodes[k,1]) + " "+ str(node_indices_absolute[k]) +"\n")
 
-    struct.write('\nQuadrilaterals\n' + str(nElem) + '\n\n')
+    struct.write('\nTriangles\n' + str(2*nElem) + '\n\n')
+
+    # struct.write('\nQuadrilaterals\n' + str(nElem) + '\n\n')
 
     for k in range(quads.shape[0]):
         if used_elem[k]:
+
             if used_elem_filtered[k]:
-                struct.write(str(node_indices[quads[k,0]-1]) + " " + str(node_indices[quads[k,1]-1])  + " " + str(node_indices[quads[k,2]-1]) + " " + str(node_indices[quads[k,3]-1]) + " 1\n")
+                ref_elem = 1
             else:
-                struct.write(str(node_indices[quads[k,0]-1]) + " " + str(node_indices[quads[k,1]-1])  + " " + str(node_indices[quads[k,2]-1]) + " " + str(node_indices[quads[k,3]-1]) + " 0\n")
+                ref_elem = 0
+
+            coord_0 = nodes[quads[k,0]-1,:]; coord_1 = nodes[quads[k,1]-1,:]; coord_2 = nodes[quads[k,2]-1,:]; coord_3 = nodes[quads[k,3]-1,:]
+            if (index_max_angle(coord_0,coord_1,coord_2,coord_3) in [0,2]):
+                struct.write(str(node_indices[quads[k,0]-1]) + " " + str(node_indices[quads[k,1]-1])  + " " + str(node_indices[quads[k,2]-1]) + " " + str(ref_elem) + "\n")
+                struct.write(str(node_indices[quads[k,2]-1]) + " " + str(node_indices[quads[k,3]-1])  + " " + str(node_indices[quads[k,0]-1]) + " " + str(ref_elem) + "\n")
+            else:
+                struct.write(str(node_indices[quads[k,1]-1]) + " " + str(node_indices[quads[k,2]-1])  + " " + str(node_indices[quads[k,3]-1]) + " " + str(ref_elem) + "\n")
+                struct.write(str(node_indices[quads[k,3]-1]) + " " + str(node_indices[quads[k,0]-1])  + " " + str(node_indices[quads[k,1]-1]) + " " + str(ref_elem) + "\n")
+
+            # struct.write(str(node_indices[quads[k,0]-1]) + " " + str(node_indices[quads[k,1]-1])  + " " + str(node_indices[quads[k,2]-1]) + " " + str(node_indices[quads[k,3]-1]) + " " + str(ref_elem) + "\n")
 
     struct.write('\nEnd\n')
     struct.close()
+
+def index_max_angle(coord_0,coord_1,coord_2,coord_3):
+
+    D01 = ( (coord_0[0]-coord_1[0])**2.0 + (coord_0[1]-coord_1[1])**2.0 + (coord_0[2]-coord_1[2])**2.0 )**0.5 # 01
+    D02 = ( (coord_0[0]-coord_2[0])**2.0 + (coord_0[1]-coord_2[1])**2.0 + (coord_0[2]-coord_2[2])**2.0 )**0.5 # 02
+    D03 = ( (coord_0[0]-coord_3[0])**2.0 + (coord_0[1]-coord_3[1])**2.0 + (coord_0[2]-coord_3[2])**2.0 )**0.5 # 03
+    D12 = ( (coord_1[0]-coord_2[0])**2.0 + (coord_1[1]-coord_2[1])**2.0 + (coord_1[2]-coord_2[2])**2.0 )**0.5 # 12
+    D13 = ( (coord_1[0]-coord_3[0])**2.0 + (coord_1[1]-coord_3[1])**2.0 + (coord_1[2]-coord_3[2])**2.0 )**0.5 # 13
+    D23 = ( (coord_2[0]-coord_3[0])**2.0 + (coord_2[1]-coord_3[1])**2.0 + (coord_2[2]-coord_3[2])**2.0 )**0.5 # 23
+    D10 = D01; D21 = D12; D31 = D13; D30 = D03; D32 = D23; D20 = D02
+
+    # angle 01 - 03
+    D1 = D01; D2 = D03; D3 = D13
+    angle_0 = numpy.arccos((D1**2.0 + D2**2.0 - D3**2.0) / (2.0 * D1 * D2))
+
+    # angle 12 - 10
+    D1 = D12; D2 = D10; D3 = D20
+    angle_1 = numpy.arccos((D1**2.0 + D2**2.0 - D3**2.0) / (2.0 * D1 * D2))
+
+    # angle 23 - 21
+    D1 = D23; D2 = D21; D3 = D31
+    angle_2 = numpy.arccos((D1**2.0 + D2**2.0 - D3**2.0) / (2.0 * D1 * D2))
+
+    # angle 30 - 32
+    D1 = D30; D2 = D32; D3 = D02
+    angle_3 = numpy.arccos((D1**2.0 + D2**2.0 - D3**2.0) / (2.0 * D1 * D2))
+
+    angles = [angle_0, angle_1, angle_2, angle_3]
+
+    return angles.index(max(angles))
+
+

@@ -31,18 +31,6 @@ def writeBDF(filename, nodes, quads, symm, quad_groups, group_names, group_names
             k += 1
     quad_groups[:] = new
 
-    writeLine('SOL 200')
-    writeLine('TIME 600')
-    writeLine('CEND')
-    writeLine('SPC = 1')
-    writeLine('ANALYSIS = STATICS')
-    writeLine('DESOBJ = 1')
-    writeLine('DESSUB = 1')
-    writeLine('DISPLACEMENT = ALL')
-    writeLine('FORCE = ALL')
-    writeLine('STRESS = ALL')
-    writeLine('SUBCASE 1')
-    writeLine('    LOAD = 1')
     writeLine('BEGIN BULK')
 
     for i in xrange(len(unique)):
@@ -51,9 +39,6 @@ def writeBDF(filename, nodes, quads, symm, quad_groups, group_names, group_names
         name = group_names[unique[i]]
         write(name+'/'+name[:name.index(':')], l=32)
         write('\n')
-
-    writeLine('$')
-    writeLine('$       grid data              0')
 
     nElem = 0
     used_vertice = numpy.zeros(nodes.shape[0], bool)
@@ -91,20 +76,24 @@ def writeBDF(filename, nodes, quads, symm, quad_groups, group_names, group_names
     for k in range(nodes.shape[0]):
         if used_vertice[k]:
             write('GRID*   ')
+
             write(str(node_indices[k]),l=16)
             write('0',l=16)
             write('%.8E' % nodes[k,0],l=16)
             write('%.8E' % nodes[k,2],l=16)
-            write('*')
-            write(str(node_indices[k]),l=7)
+
+            write('*G')
+            write(str(node_indices[k]),l=6)
             write('\n')
-            write('*')
-            write(str(node_indices[k]),l=7)
+            write('*G')
+            write(str(node_indices[k]),l=6)
+
             write('%.8E' % nodes[k,1],l=16)
             write('0',l=16)
             write(' ',l=16)
             write('0',l=16)
             write(' ',l=8)
+
             write('\n')
 
     for i in range(quads.shape[0]):

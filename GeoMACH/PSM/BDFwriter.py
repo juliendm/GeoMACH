@@ -96,55 +96,61 @@ def writeBDF(filename, nodes, quads, symm, quad_groups, group_names, group_names
 
             write('\n')
 
+    write_tria = False
+
     for i in range(quads.shape[0]):
 
-        # write('CQUAD4  ')
-        # write(str(i+1),l=8)
-        # write(str(quad_groups[i]+1),l=8)
-        # #write(str(i+1),l=8)
-        # write(str(node_indices[quads[i,0]-1]),l=8)
-        # write(str(node_indices[quads[i,1]-1]),l=8)
-        # write(str(node_indices[quads[i,2]-1]),l=8)
-        # write(str(node_indices[quads[i,3]-1]),l=8)
-        # write('\n')
+        if not write_tria:
 
-        coord_0 = nodes[quads[i,0]-1,:]; coord_1 = nodes[quads[i,1]-1,:]; coord_2 = nodes[quads[i,2]-1,:]; coord_3 = nodes[quads[i,3]-1,:]
-
-        if (index_max_angle(coord_0,coord_1,coord_2,coord_3) in [0,2]):
-
-            write('CTRIA3  ')
-            write(str(2*i+1),l=8)
+            write('CQUAD4  ')
+            write(str(i+1),l=8)
             write(str(quad_groups[i]+1),l=8)
+            #write(str(i+1),l=8)
             write(str(node_indices[quads[i,0]-1]),l=8)
             write(str(node_indices[quads[i,1]-1]),l=8)
             write(str(node_indices[quads[i,2]-1]),l=8)
-            write('\n')
-
-            write('CTRIA3  ')
-            write(str(2*i+2),l=8)
-            write(str(quad_groups[i]+1),l=8)
-            write(str(node_indices[quads[i,2]-1]),l=8)
             write(str(node_indices[quads[i,3]-1]),l=8)
-            write(str(node_indices[quads[i,0]-1]),l=8)
             write('\n')
 
         else:
 
-            write('CTRIA3  ')
-            write(str(2*i+1),l=8)
-            write(str(quad_groups[i]+1),l=8)
-            write(str(node_indices[quads[i,1]-1]),l=8)
-            write(str(node_indices[quads[i,2]-1]),l=8)
-            write(str(node_indices[quads[i,3]-1]),l=8)
-            write('\n')
+            coord_0 = nodes[quads[i,0]-1,:]; coord_1 = nodes[quads[i,1]-1,:]; coord_2 = nodes[quads[i,2]-1,:]; coord_3 = nodes[quads[i,3]-1,:]
 
-            write('CTRIA3  ')
-            write(str(2*i+2),l=8)
-            write(str(quad_groups[i]+1),l=8)
-            write(str(node_indices[quads[i,3]-1]),l=8)
-            write(str(node_indices[quads[i,0]-1]),l=8)
-            write(str(node_indices[quads[i,1]-1]),l=8)
-            write('\n')
+            if (index_max_angle(coord_0,coord_1,coord_2,coord_3) in [0,2]):
+
+                write('CTRIA3  ')
+                write(str(2*i+1),l=8)
+                write(str(quad_groups[i]+1),l=8)
+                write(str(node_indices[quads[i,0]-1]),l=8)
+                write(str(node_indices[quads[i,1]-1]),l=8)
+                write(str(node_indices[quads[i,2]-1]),l=8)
+                write('\n')
+
+                write('CTRIA3  ')
+                write(str(2*i+2),l=8)
+                write(str(quad_groups[i]+1),l=8)
+                write(str(node_indices[quads[i,2]-1]),l=8)
+                write(str(node_indices[quads[i,3]-1]),l=8)
+                write(str(node_indices[quads[i,0]-1]),l=8)
+                write('\n')
+
+            else:
+
+                write('CTRIA3  ')
+                write(str(2*i+1),l=8)
+                write(str(quad_groups[i]+1),l=8)
+                write(str(node_indices[quads[i,1]-1]),l=8)
+                write(str(node_indices[quads[i,2]-1]),l=8)
+                write(str(node_indices[quads[i,3]-1]),l=8)
+                write('\n')
+
+                write('CTRIA3  ')
+                write(str(2*i+2),l=8)
+                write(str(quad_groups[i]+1),l=8)
+                write(str(node_indices[quads[i,3]-1]),l=8)
+                write(str(node_indices[quads[i,0]-1]),l=8)
+                write(str(node_indices[quads[i,1]-1]),l=8)
+                write('\n')
 
 
         q = quads[i,:]
@@ -201,10 +207,10 @@ def writeBDF(filename, nodes, quads, symm, quad_groups, group_names, group_names
 
     f.close()
 
-    writeMESH(filename.split('.bdf')[0] + '_surface.mesh', nodes, quads, quad_groups, node_indices, node_indices_filtered, nVertices_filtered, nElem_filtered, used_vertice_filtered, used_elem_filtered, used_elem_filtered)
-    writeMESH(filename.split('.bdf')[0] + '.mesh', nodes, quads, quad_groups, node_indices, node_indices, nVertices, nElem, used_vertice, used_elem, used_elem_filtered)
+    writeMESH(filename.split('.bdf')[0] + '_surface.mesh', nodes, quads, quad_groups, node_indices, node_indices_filtered, nVertices_filtered, nElem_filtered, used_vertice_filtered, used_elem_filtered, used_elem_filtered, write_tria)
+    writeMESH(filename.split('.bdf')[0] + '.mesh', nodes, quads, quad_groups, node_indices, node_indices, nVertices, nElem, used_vertice, used_elem, used_elem_filtered, write_tria)
 
-def writeMESH(filename, nodes, quads, quad_groups, node_indices_absolute, node_indices, nVertices, nElem, used_vertice, used_elem, used_elem_filtered):
+def writeMESH(filename, nodes, quads, quad_groups, node_indices_absolute, node_indices, nVertices, nElem, used_vertice, used_elem, used_elem_filtered, write_tria):
 
     struct = open(filename, 'w')
 
@@ -214,9 +220,10 @@ def writeMESH(filename, nodes, quads, quad_groups, node_indices_absolute, node_i
         if used_vertice[k]:
             struct.write(str(nodes[k,0]) + " " + str(nodes[k,2]) + " " + str(nodes[k,1]) + " "+ str(node_indices_absolute[k]) +"\n")
 
-    struct.write('\nTriangles\n' + str(2*nElem) + '\n\n')
-
-    # struct.write('\nQuadrilaterals\n' + str(nElem) + '\n\n')
+    if write_tria:
+        struct.write('\nTriangles\n' + str(2*nElem) + '\n\n')
+    else:
+        struct.write('\nQuadrilaterals\n' + str(nElem) + '\n\n')
 
     for k in range(quads.shape[0]):
         if used_elem[k]:
@@ -226,15 +233,17 @@ def writeMESH(filename, nodes, quads, quad_groups, node_indices_absolute, node_i
             else:
                 ref_elem = 0
 
-            coord_0 = nodes[quads[k,0]-1,:]; coord_1 = nodes[quads[k,1]-1,:]; coord_2 = nodes[quads[k,2]-1,:]; coord_3 = nodes[quads[k,3]-1,:]
-            if (index_max_angle(coord_0,coord_1,coord_2,coord_3) in [0,2]):
-                struct.write(str(node_indices[quads[k,0]-1]) + " " + str(node_indices[quads[k,1]-1])  + " " + str(node_indices[quads[k,2]-1]) + " " + str(ref_elem) + "\n")
-                struct.write(str(node_indices[quads[k,2]-1]) + " " + str(node_indices[quads[k,3]-1])  + " " + str(node_indices[quads[k,0]-1]) + " " + str(ref_elem) + "\n")
-            else:
-                struct.write(str(node_indices[quads[k,1]-1]) + " " + str(node_indices[quads[k,2]-1])  + " " + str(node_indices[quads[k,3]-1]) + " " + str(ref_elem) + "\n")
-                struct.write(str(node_indices[quads[k,3]-1]) + " " + str(node_indices[quads[k,0]-1])  + " " + str(node_indices[quads[k,1]-1]) + " " + str(ref_elem) + "\n")
+            if write_tria:
+                coord_0 = nodes[quads[k,0]-1,:]; coord_1 = nodes[quads[k,1]-1,:]; coord_2 = nodes[quads[k,2]-1,:]; coord_3 = nodes[quads[k,3]-1,:]
+                if (index_max_angle(coord_0,coord_1,coord_2,coord_3) in [0,2]):
+                    struct.write(str(node_indices[quads[k,0]-1]) + " " + str(node_indices[quads[k,1]-1])  + " " + str(node_indices[quads[k,2]-1]) + " " + str(ref_elem) + "\n")
+                    struct.write(str(node_indices[quads[k,2]-1]) + " " + str(node_indices[quads[k,3]-1])  + " " + str(node_indices[quads[k,0]-1]) + " " + str(ref_elem) + "\n")
+                else:
+                    struct.write(str(node_indices[quads[k,1]-1]) + " " + str(node_indices[quads[k,2]-1])  + " " + str(node_indices[quads[k,3]-1]) + " " + str(ref_elem) + "\n")
+                    struct.write(str(node_indices[quads[k,3]-1]) + " " + str(node_indices[quads[k,0]-1])  + " " + str(node_indices[quads[k,1]-1]) + " " + str(ref_elem) + "\n")
 
-            # struct.write(str(node_indices[quads[k,0]-1]) + " " + str(node_indices[quads[k,1]-1])  + " " + str(node_indices[quads[k,2]-1]) + " " + str(node_indices[quads[k,3]-1]) + " " + str(ref_elem) + "\n")
+            else:
+                struct.write(str(node_indices[quads[k,0]-1]) + " " + str(node_indices[quads[k,1]-1])  + " " + str(node_indices[quads[k,2]-1]) + " " + str(node_indices[quads[k,3]-1]) + " " + str(ref_elem) + "\n")
 
     struct.write('\nEnd\n')
     struct.close()
